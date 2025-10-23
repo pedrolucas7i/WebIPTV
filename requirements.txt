@@ -1,7 +1,2 @@
 Flask==3.0.3
-Flask-SocketIO==5.3.6
-python-socketio==5.11.2
-eventlet==0.36.1
-whisper==1.0
-openai-whisper
 ffmpeg-python==0.2.0
