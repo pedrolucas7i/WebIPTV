@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Assistindo Canal</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        video {
+            width: 90%;
+            height: auto;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <video id="player" controls autoplay muted playsinline>
+        <source id="source" src="/hls/{{ stream_id }}/index.m3u8" type="application/x-mpegURL">
+        Seu navegador não suporta vídeo HTML5.
+    </video>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+        if (Hls.isSupported()) {
+            var video = document.getElementById('player');
+            var hls = new Hls();
+            hls.loadSource('/hls/{{ stream_id }}/index.m3u8');
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                video.play();
+            });
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Playlist</title>
+</head>
+<body>
+    <h2>Available Channels</h2>
+    <ul>
+        {% for c in channels %}
+        <li>
+            <img src="{{ c.get('tvg-logo', '') }}" width="60">
+            <a href="/watch?url={{ c['url'] }}&name={{ c['name'] }}">{{ c['name'] }}</a>
+            ({{ c.get('group-title', 'No Group') }})
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
