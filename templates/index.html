@@ -1,19 +1,123 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="utf-8">
-  <title>IPTV Player</title>
-  <style>
-    body { background:#111; color:#fff; text-align:center; font-family:sans-serif; }
-    input { width:70%; padding:10px; border-radius:8px; border:none; }
-    button { padding:10px 20px; border:none; border-radius:8px; background:#0af; color:#fff; font-weight:bold; }
-  </style>
+    <meta charset="utf-8">
+    <title>IPTV Player - Android TV</title>
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 30px;
+        }
+
+        /* Grid de canais */
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-gap: 30px;
+            justify-items: center;
+        }
+
+        .channel-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #222;
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.2s, background 0.2s;
+            width: 180px;
+            height: 180px;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .channel-card:focus,
+        .channel-card:hover {
+            background: #0af;
+            transform: scale(1.1);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .channel-card img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .channel-card span {
+            color: #ccc;
+            font-size: 0.7em;
+        }
+
+        input {
+            width: 60%;
+            padding: 15px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            border: none;
+            margin: 0 auto 30px auto;
+            display: block;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>🎬 IPTV Player (via FFmpeg)</h1>
-  <form method="get" action="/watch">
-    <input type="text" name="url" placeholder="Cole a URL do canal .m3u8 ou stream"><br><br>
-    <button type="submit">Assistir</button>
-  </form>
+    <h1>🎬 IPTV Player</h1>
+
+    <input type="text" id="search" placeholder="Filtrar canais...">
+
+    <div class="channel-grid" tabindex="0">
+        {% for c in channels %}
+        <div class="channel-card" tabindex="0" data-name="{{ c['name'] }}" data-group="{{ c.get('group-title', '') }}">
+            <img src="{{ c.get('tvg-logo', '') }}" alt="{{ c['name'] }}">
+            <a href="/watch?url={{ c['url'] }}" title="{{ c.get('tvg-id', '') }}">{{ c['name'] }}</a>
+            <span>{{ c.get('group-title', 'No Group') }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Foco com teclado/remoto
+        const cards = Array.from(document.querySelectorAll('.channel-card'));
+        let selected = 0;
+        if (cards.length > 0) cards[selected].focus();
+
+        document.addEventListener('keydown', e => {
+            const cols = Math.floor(document.querySelector('.channel-grid').offsetWidth / 200);
+            if (e.key === 'ArrowRight') selected = (selected + 1) % cards.length;
+            if (e.key === 'ArrowLeft') selected = (selected - 1 + cards.length) % cards.length;
+            if (e.key === 'ArrowDown') selected = (selected + cols) % cards.length;
+            if (e.key === 'ArrowUp') selected = (selected - cols + cards.length) % cards.length;
+            if (e.key === 'Enter') cards[selected].querySelector('a').click();
+            cards[selected].focus();
+        });
+
+        // Busca/filter
+        const searchInput = document.getElementById('search');
+        searchInput.addEventListener('input', e => {
+            const term = e.target.value.toLowerCase();
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const group = card.dataset.group.toLowerCase();
+                if (name.includes(term) || group.includes(term)) card.style.display = 'flex';
+                else card.style.display = 'none';
+            });
+        });
+    </script>
 </body>
+
 </html>

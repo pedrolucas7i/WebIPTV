@@ -10,38 +10,97 @@
             margin: 0;
             background: #000;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
+            overflow: hidden;
         }
 
         video {
-            width: 90%;
-            height: auto;
-            border-radius: 10px;
+            width: 95%;
+            max-height: 90%;
+            border-radius: 15px;
+            outline: none;
+        }
+
+        #status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-family: sans-serif;
+            font-size: 2em;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
-    <video id="player" controls autoplay muted playsinline>
-        <source id="source" src="/hls/{{ stream_id }}/index.m3u8" type="application/x-mpegURL">
+    <div id="status">Carregando stream...</div>
+    <video id="player" controls autoplay muted playsinline tabindex="0">
         Seu navegador não suporta vídeo HTML5.
     </video>
 
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
-        if (Hls.isSupported()) {
-            var video = document.getElementById('player');
-            var hls = new Hls();
-            hls.loadSource('/hls/{{ stream_id }}/index.m3u8');
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                video.play();
-            });
-        }
-    </script>
+        const streamId = "{{ stream_id }}";
+        const video = document.getElementById('player');
+        const status = document.getElementById('status');
+        const hlsUrl = `/hls/${streamId}/index.m3u8`;
 
+        function tryLoadStream() {
+            fetch(hlsUrl, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        status.textContent = "Stream carregada!";
+                        if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(hlsUrl);
+                            hls.attachMedia(video);
+                            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                            video.src = hlsUrl;
+                            video.addEventListener('loadedmetadata', () => video.play());
+                        }
+                    } else {
+                        status.textContent = "Aguardando stream...";
+                        setTimeout(tryLoadStream, 1000);
+                    }
+                })
+                .catch(err => {
+                    status.textContent = "Aguardando stream...";
+                    setTimeout(tryLoadStream, 1000);
+                });
+        }
+
+        tryLoadStream();
+
+        // Suporte teclado / controle remoto
+        document.addEventListener('keydown', e => {
+            switch (e.key) {
+                case 'ArrowLeft': // Voltar 10s
+                    video.currentTime = Math.max(video.currentTime - 10, 0);
+                    break;
+                case 'ArrowRight': // Avançar 10s
+                    video.currentTime = Math.min(video.currentTime + 10, video.duration);
+                    break;
+                case 'ArrowUp': // Mudar para canal anterior
+                    window.location.href = document.referrer || '/';
+                    break;
+                case 'ArrowDown': // Mudar para próximo canal (vai para lista)
+                    window.location.href = '/';
+                    break;
+                case 'Enter': // Play/Pause
+                case ' ':
+                    if (video.paused) video.play();
+                    else video.pause();
+                    break;
+                case 'Backspace': // Voltar para lista de canais
+                    window.location.href = '/';
+                    break;
+            }
+        });
+    </script>
 </body>
 
 </html>
